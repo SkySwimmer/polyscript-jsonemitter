@@ -1,0 +1,20 @@
+{
+    "enabled": true,
+    
+    "branches": {
+        "experimental": [
+            "develop"
+        ],
+        "stable": [
+            "experimental"
+        ]
+    },
+    "hardMergeFor": {
+        "experimental": [
+            "develop"
+        ],
+        "stable": [
+            "experimental"
+        ]
+    }
+}

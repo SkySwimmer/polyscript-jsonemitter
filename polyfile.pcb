@@ -1,0 +1,8 @@
+# Project information
+group=usr.skyswimmer
+id=polyscript-jsonemitter
+name="polyscript-jsonemitter"
+version=a1.0
+
+# Sub-projects
+# None right now

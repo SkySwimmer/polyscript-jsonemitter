@@ -1,0 +1,29 @@
+# Wrapper downloaded stuff
+.polytool
+.polytool-version
+build/
+polylocal/
+
+# Dependencies
+deps/
+
+# Gradle
+.gradle/
+
+# Eclipse
+bin/
+.settings/
+.classpath
+.project
+
+#VSCode
+.vscode/
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+out/
+
+# Run files
+run/*

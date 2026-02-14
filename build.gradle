@@ -1,0 +1,139 @@
+plugins {
+    id 'java'
+	id 'maven-publish'
+}
+
+version = "a1.0"
+group = "usr.skyswimmer"
+
+sourceCompatibility = '1.17'
+targetCompatibility = '1.17'
+
+def projectId = "polyscriptjsonemitter"
+def projectName = "polyscript-jsonemitter"
+def authorName = "SkySwimmer"
+def pkg = "${group}.${projectId}"
+
+buildDir = 'build/gradleout'
+
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs 'fluid'
+	}
+}
+
+jar {
+	baseName "${projectName}"
+	manifest {
+		attributes([
+			"Specification-Title": "${projectName}",
+			"Specification-Vendor": "${authorName}",
+			"Specification-Version": project.version,
+			"Implementation-Title": project.name,
+			"Implementation-Version": project.version,
+			"Implementation-Vendor" :"${authorName}",
+			"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+		])
+	}
+	includeEmptyDirs = false
+}
+
+task javaDocs(type: Javadoc) {
+	classpath = sourceSets.main.runtimeClasspath
+	source = sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar, dependsOn: 'javaDocs') {
+	from javadoc
+	baseName "${projectName}"
+	classifier = 'javadoc'
+	exclude "**/extra/**"
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	baseName "${projectId}"
+	classifier = 'sources'
+	from sourceSets.main.allSource
+	exclude "**/extra/**"
+}
+
+artifacts {
+	archives javadocJar
+	archives sourcesJar
+}
+
+dependencies {
+	implementation project("polyscript-runner")
+	implementation project("quicktools-utils")
+	implementation project("connective-http")
+
+	implementation group: 'org.asf.cyan', name: 'Fluid', version: '1.0.0.A33'
+
+	implementation group: 'com.google.code.gson', name: 'gson', version: '2.13.2'
+
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.25.3'
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.25.3'
+}
+
+project.configurations.implementation.canBeResolved = true
+
+import java.nio.file.*
+task toolscripts () {
+	doLast {
+		copy {
+			from "scripts/toollauncher.sh"
+			from "scripts/toollauncher.bat"
+			into "build/gradleout/tools"
+		}
+		for (ResolvedArtifact arti : project.configurations.implementation.resolvedConfiguration.getResolvedArtifacts()) {
+			if (arti.getClassifier() != null)
+				continue;
+			copy {
+				from arti.file
+				rename arti.file.getName(), arti.name + (arti.getClassifier() != null && !arti.getClassifier().isEmpty() ? "-" + arti.getClassifier() : "") + "." + arti.getExtension()
+				into "build/gradleout/tools/libs"
+			}
+		}
+		for (def task : project.tasks) {
+			if (task instanceof AbstractArchiveTask) {
+				if (!task.getArchiveClassifier().get().isEmpty())
+					continue;
+					
+				copy {
+					from task.getArchiveFile().get()
+					rename task.getArchiveFile().get().getAsFile().getName(), task.getArchiveBaseName().get() + (task.getArchiveClassifier().get() != null && !task.getArchiveClassifier().get().isEmpty() ? "-" + task.getArchiveClassifier().get() : "") + "." + task.getArchiveExtension().get()
+					into "build/gradleout/tools/libs"
+				}
+			}
+		}
+		for (def f : new File("src/main/java/"+pkg.replace(".","/")+"/tools").listFiles()) {
+			if (!f.isFile())
+				continue
+			String scriptMain = pkg + ".tools." + f.getName().replace(".java", "")
+			String unixScript = ""
+			unixScript += "#!/bin/bash\n"
+			unixScript += '''chmod +x "$(dirname "$0")/toollauncher.sh"\n'''
+			unixScript += '''chmod +x "$0"\n'''
+			unixScript += '''\n'''
+			unixScript += '''"$(dirname "$0")/toollauncher.sh" ''' + scriptMain + " " + '''"$@"''' + "\n"
+			unixScript += "exit \$?\n"
+			String dosScript = ""
+			dosScript += "@echo off\n"
+			dosScript += "setlocal EnableDelayedExpansion\n"
+			dosScript += '''set "dirpath=%~dp0"\n'''
+			dosScript += '''"%dirpath%/toollauncher" ''' + scriptMain + ''' %*\n'''
+			dosScript += "exit %ERRORLEVEL%\n"
+			String outWin = "build/gradleout/tools/" + f.getName().replace(".java", "").toLowerCase() + ".bat"
+			String outPosix = "build/gradleout/tools/" + f.getName().replace(".java", "").toLowerCase()
+			Files.writeString(file(outWin).toPath(), dosScript)
+			Files.writeString(file(outPosix).toPath(), unixScript)
+		}
+	}
+}
+
+toolscripts.dependsOn project.tasks.build
+build.finalizedBy toolscripts

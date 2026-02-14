@@ -1,0 +1,10 @@
+rootProject.name = 'polyscript-jsonemitter'
+
+include(":quicktools-utils")
+project(":quicktools-utils").projectDir = file("deps/quicktools-utils")
+
+include(":connective-http")
+project(":connective-http").projectDir = file("deps/connective-http")
+
+include(":polyscript-runner")
+project(":polyscript-runner").projectDir = file("deps/polyscript-runner")
