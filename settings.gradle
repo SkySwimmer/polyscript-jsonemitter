@@ -8,3 +8,9 @@ project(":connective-http").projectDir = file("deps/connective-http")
 
 include(":polyscript-runner")
 project(":polyscript-runner").projectDir = file("deps/polyscript-runner")
+
+include(":plugin-shellscript")
+project(":plugin-shellscript").projectDir = file("deps/polyscript-runner/plugins/plugin-shellscript")
+
+include(":plugin-git")
+project(":plugin-git").projectDir = file("deps/polyscript-runner/plugins/plugin-git")
