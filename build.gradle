@@ -77,6 +77,9 @@ dependencies {
 
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.25.3'
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.25.3'
+
+	testImplementation project(":plugin-shellscript")
+	testImplementation project(":plugin-git")
 }
 
 project.configurations.implementation.canBeResolved = true
