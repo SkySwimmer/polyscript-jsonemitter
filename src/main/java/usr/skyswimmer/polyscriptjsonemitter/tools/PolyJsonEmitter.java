@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.asf.cyan.fluid.bytecode.FluidClassPool;
@@ -23,6 +24,7 @@ import usr.skyswimmer.polyscriptrunner.PolyScript;
 import usr.skyswimmer.polyscriptrunner.PolyScriptEngine;
 import usr.skyswimmer.polyscriptrunner.plugins.IPolyscriptPlugin;
 import usr.skyswimmer.polyscriptrunner.plugins.PluginScanner;
+import usr.skyswimmer.quicktoolsutils.connective.logger.Log4jManagerImpl;
 
 public class PolyJsonEmitter {
 
@@ -30,6 +32,16 @@ public class PolyJsonEmitter {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		// Argument parsing
+
+		// Setup logging
+		if (System.getProperty("debugMode") != null) {
+			System.setProperty("log4j2.configurationFile",
+					PolyScriptEngine.class.getResource("/log4j2-ide.xml").toString());
+		} else {
+			System.setProperty("log4j2.configurationFile",
+					PolyScriptEngine.class.getResource("/log4j2.xml").toString());
+		}
+		new Log4jManagerImpl().assignAsMain();
 
 		// Script
 		if (args.length == 0) {
@@ -63,15 +75,18 @@ public class PolyJsonEmitter {
 		String destF = args[2];
 		File destFile = new File(destF);
 
+		// Log
+		logger = LogManager.getLogger("polyscript-runner");
+		logger.info("Setting up class pool...");
+
 		// Load plugins
 		HashMap<String, IPolyscriptPlugin> plugins = new HashMap<String, IPolyscriptPlugin>();
 		FluidClassPool pool = FluidClassPool.create();
 
 		// Set up engine
-		PolyScriptEngine engine = new PolyScriptEngine(scriptFile, name -> plugins.get(name));
+		logger.info("Creating engine...");
+		PolyScriptEngine engine = new PolyScriptEngine(scriptFile, name -> plugins.get(name), Level.INFO);
 		try {
-			logger = LogManager.getLogger("polyscript-runner");
-
 			// Load plugins
 			// Import classpath
 			logger.info("Loading plugins...");
